@@ -313,7 +313,12 @@
 			},
 			addData: function (data) { //parse data
 				if (p.dataType == 'json') {
-					data = $.extend({rows: [], page: 0, total: 0}, data);
+					// If we use a litteral here as first parameter to $.extend, 
+					// instead of |def|, $.extend leaks a global variable.
+					// I have no idea why this is happening, though.
+					var def = {rows: [], page: 0, total: 0};
+					data = $.extend(def, data);
+					def = null;
 				}
 				if (p.preProcess) {
 					data = p.preProcess(data);

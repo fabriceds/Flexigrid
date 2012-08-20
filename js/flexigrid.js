@@ -20,6 +20,10 @@
 			url: false, //URL if using data from AJAX
 			method: 'POST', //data sending method
 			dataType: 'xml', //type of data for AJAX, either xml or json
+			reSortMode: 'keep', //sorting mode used when the sorting column changes.
+								//Possible values :
+			                    // - keep: Old behaviour, the sorting mode does not change.
+							    // - asc, desc: The sorting mode is set to this.
 			errormsg: 'Connection Error',
 			usepager: false,
 			nowrap: true,
@@ -484,6 +488,8 @@
 					} else {
 						p.sortorder = 'asc';
 					}
+				} else if (p.reSortMode !== 'keep') {
+					p.sortorder = p.reSortMode;
 				}
 				if(!p.sortorder) p.sortorder = 'asc';
 				

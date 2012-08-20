@@ -480,6 +480,8 @@
 						p.sortorder = 'asc';
 					}
 				}
+				if(!p.sortorder) p.sortorder = 'asc';
+				
 				$(th).addClass('sorted').siblings().removeClass('sorted');
 				$('.sdesc', this.hDiv).removeClass('sdesc');
 				$('.sasc', this.hDiv).removeClass('sasc');

@@ -937,8 +937,8 @@
 			btnDiv.className = 'fbutton';
 			
 			var tSelect = document.createElement('select');
-			$(tSelect).change( function () { g.combo_doSelectAction( tSelect ) } );
-			$(tSelect).click( function () { g.combo_resetIndex( tSelect) } );
+			$(tSelect).change( function () { g.combo_doSelectAction( tSelect ); } );
+			$(tSelect).click( function () { g.combo_resetIndex( tSelect); } );
 			tSelect.className = 'cselect';
 			$(btnDiv).append(tSelect);
 			
@@ -1077,7 +1077,7 @@
 		$(g.bDiv).css({
 			height: (p.height == 'auto') ? 'auto' : p.height + "px"
 		}).scroll(function (e) {
-			g.scroll()
+			g.scroll();
 		}).append(t);
 		if (p.height == 'auto') {
 			$('table', g.bDiv).addClass('autoht');
@@ -1121,9 +1121,9 @@
 					g.fixHeight($(g.gDiv).height());
 					$(cgDiv).hover(function () {
 						g.fixHeight();
-						$(this).addClass('dragging')
+						$(this).addClass('dragging');
 					}, function () {
-						if (!g.colresize) $(this).removeClass('dragging')
+						if (!g.colresize) $(this).removeClass('dragging');
 					});
 				}
 			});
@@ -1135,7 +1135,7 @@
 		if (p.resizable && p.height != 'auto') {
 			g.vDiv.className = 'vGrip';
 			$(g.vDiv).mousedown(function (e) {
-				g.dragStart('vresize', e)
+				g.dragStart('vresize', e);
 			}).html('<span></span>');
 			$(g.bDiv).after(g.vDiv);
 		}
@@ -1161,22 +1161,22 @@
 			var html = ' <div class="pGroup"> <div class="pFirst pButton"><span></span></div><div class="pPrev pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"><span class="pcontrol">' + p.pagetext + ' <input type="text" size="4" value="1" /> ' + p.outof + ' <span> 1 </span></span></div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pNext pButton"><span></span></div><div class="pLast pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"> <div class="pReload pButton"><span></span></div> </div> <div class="btnseparator"></div> <div class="pGroup"><span class="pPageStat"></span></div>';
 			$('div', g.pDiv).html(html);
 			$('.pReload', g.pDiv).click(function () {
-				g.populate()
+				g.populate();
 			});
 			$('.pFirst', g.pDiv).click(function () {
-				g.changePage('first')
+				g.changePage('first');
 			});
 			$('.pPrev', g.pDiv).click(function () {
-				g.changePage('prev')
+				g.changePage('prev');
 			});
 			$('.pNext', g.pDiv).click(function () {
-				g.changePage('next')
+				g.changePage('next');
 			});
 			$('.pLast', g.pDiv).click(function () {
-				g.changePage('last')
+				g.changePage('last');
 			});
 			$('.pcontrol input', g.pDiv).keydown(function (e) {
-				if (e.keyCode == 13) g.changePage('input')
+				if (e.keyCode == 13) g.changePage('input');
 			});
 			if ($.browser.msie && $.browser.version < 7) $('.pButton', g.pDiv).hover(function () {
 				$(this).addClass('pBtnOver');
@@ -1347,11 +1347,11 @@
 		});
 		//add document events
 		$(document).mousemove(function (e) {
-			g.dragMove(e)
+			g.dragMove(e);
 		}).mouseup(function (e) {
-			g.dragEnd()
+			g.dragEnd();
 		}).hover(function () {}, function () {
-			g.dragEnd()
+			g.dragEnd();
 		});
 		//browser adjustments
 		if ($.browser.msie && $.browser.version < 7.0) {
@@ -1376,7 +1376,7 @@
 	};
 	var docloaded = false;
 	$(document).ready(function () {
-		docloaded = true
+		docloaded = true;
 	});
 	$.fn.flexigrid = function (p) {
 		return this.each(function () {

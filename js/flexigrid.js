@@ -70,16 +70,16 @@
 		var g = {
 			hset: {},
 			rePosDrag: function () {
-				var cdleft = 0 - this.hDiv.scrollLeft;
-				if (this.hDiv.scrollLeft > 0) cdleft -= Math.floor(p.cgwidth / 2);
-				$(g.cDrag).css({
-					top: g.hDiv.offsetTop + 1
-				});
+				var cl = this.hDiv.scrollLeft,
+					cdleft = 0 - cl;
+				if (cl > 0) cdleft -= Math.floor(p.cgwidth / 2);
+				g.cDrag.style.top = (g.hDiv.offsetTop + 1)+'px'
+				
 				var cdpad = this.cdpad;
 				$('div', g.cDrag).hide();
-				$('thead tr:first th:visible', this.hDiv).each(function () {
-					var n = $('thead tr:first th:visible', g.hDiv).index(this);
-					var cdpos = parseInt($('div', this).width());
+				
+				$('thead tr:first th:visible', this.hDiv).each(function (n) {
+					var cdpos = parseInt($(this.firstChild).width());
 					if (cdleft == 0) cdleft -= Math.floor(p.cgwidth / 2);
 					cdpos = cdpos + cdleft + cdpad;
 					if (isNaN(cdpos)) {
@@ -218,13 +218,14 @@
 					var n = this.colresize.n;
 					var nw = this.colresize.nw;
 					$('th:visible div:eq(' + n + ')', this.hDiv).css('width', nw);
-					$('tr', this.bDiv).each(
-						function () {
-							var $tdDiv = $('td:visible div:eq(' + n + ')', this);
-							$tdDiv.css('width', nw);
-							g.addTitleToCell($tdDiv);
-						}
-					);
+					this.bDiv.style.display = 'none';
+					var rows = $('tr', this.bDiv), div;
+					for(var i =0, lim = rows.length; i < lim; i++) {
+						div = rows[i].children[n].firstChild;
+						div.style.width = nw + 'px';
+						g.addTitleToCell(div);
+					}
+					this.bDiv.style.display = 'block';
 					this.hDiv.scrollLeft = this.bDiv.scrollLeft;
 					$('div:eq(' + n + ')', this.cDrag).siblings().show();
 					$('.dragging', this.cDrag).removeClass('dragging');
@@ -355,47 +356,63 @@
 				}
 				this.buildpager();
 				//build new body
-				var tbody = document.createElement('tbody');
+				var tbody = document.createElement('tbody'),
+					headers = $('thead tr:first th', g.hDiv),
+					indeces = [],
+					aligns = [],
+					abbrs = [],
+					hi, 
+					numCols = headers.length,
+					rows = data.rows,
+					row, numRows, ri,
+					handlesRequired = ($('thead', this.gDiv).length < 1);
+				
+				// Getting all columns info.
+				headers.each(function(i) {
+					var jt = $(this);
+					indeces[i] = jt.attr('axis').substr(3);
+					aligns[i] = this.align;
+					abbrs[i] = jt.attr('abbr');
+				}); 
 				if (p.dataType == 'json') {
-					$.each(data.rows, function (i, row) {
+					for(ri = 0, numRows = rows.length; ri < numRows; ri++) {
 						var tr = document.createElement('tr');
+						row = rows[ri];
 						if (row.name) tr.name = row.name;
 						if (row.color) {
-							$(tr).css('background',row.color);
+							tr.style.background = row.color;
 						} else {
-							if (i % 2 && p.striped) tr.className = 'erow';
+							if (ri % 2 && p.striped) tr.className = 'erow';
 						}
 						if (row[p.idProperty]) {
 							tr.id = 'row' + row[p.idProperty];
 						}
-						$('thead tr:first th', g.hDiv).each( //add cell
-							function () {
-								var td = document.createElement('td');
-								var idx = $(this).attr('axis').substr(3);
-								td.align = this.align;
-								// If each row is the object itself (no 'cell' key)
-								if (typeof row.cell == 'undefined') {
-									td.innerHTML = row[p.colModel[idx].name];
+						for(hi = 0; hi < numCols; hi++) {
+							var td = document.createElement('td');
+							var idx = indeces[hi];
+							td.align = aligns[hi];
+							// If each row is the object itself (no 'cell' key)
+							if (typeof row.cell == 'undefined') {
+								td.innerHTML = row[p.colModel[idx].name];
+							} else {
+								// If the json elements aren't named (which is typical), use numeric order
+								if (typeof row.cell[idx] != "undefined") {
+									td.innerHTML = (row.cell[idx] != null) ? row.cell[idx] : '';//null-check for Opera-browser
 								} else {
-									// If the json elements aren't named (which is typical), use numeric order
-									if (typeof row.cell[idx] != "undefined") {
-										td.innerHTML = (row.cell[idx] != null) ? row.cell[idx] : '';//null-check for Opera-browser
-									} else {
-										td.innerHTML = row.cell[p.colModel[idx].name];
-									}
+									td.innerHTML = row.cell[p.colModel[idx].name];
 								}
-								// If the content has a <BGCOLOR=nnnnnn> option, decode it.
-								var offs = td.innerHTML.indexOf( '<BGCOLOR=' );
-								if( offs >0 ) {
-									$(td).css('background',  text.substr(offs+7,7) );
-								}
-								
-								$(td).attr('abbr', $(this).attr('abbr'));
-								$(tr).append(td);
-								td = null;
 							}
-						);
-						if ($('thead', this.gDiv).length < 1) {//handle if grid has no headers
+							// If the content has a <BGCOLOR=nnnnnn> option, decode it.
+							var offs = td.innerHTML.indexOf( '<BGCOLOR=' );
+							if( offs >0 ) {
+								td.style.background =   text.substr(offs+7,7);
+							}
+							
+							td.setAttribute('abbr', abbrs[hi]);
+							tr.appendChild(td);
+							td = null;
+						}
+						if (handlesRequired) {//handle if grid has no headers
 							for (idx = 0; idx < cell.length; idx++) {
 								var td = document.createElement('td');
 								// If the json elements aren't named (which is typical), use numeric order
@@ -404,13 +421,13 @@
 								} else {
 									td.innerHTML = row.cell[p.colModel[idx].name];
 								}
-								$(tr).append(td);
+								tr.appendChild(td);
 								td = null;
 							}
 						}
-						$(tbody).append(tr);
+						tbody.appendChild(tr);
 						tr = null;
-					});
+					};
 				} else if (p.dataType == 'xml') {
 					var i = 1;
 					$("rows row", data).each(function () {
@@ -457,8 +474,8 @@
 					});
 				}
 				$('tr', t).unbind();
-				$(t).empty();
-				$(t).append(tbody);
+				t.innerHTML = '';
+				t.appendChild(tbody);
 				this.addCellProp();
 				this.addRowProp();
 				this.rePosDrag();
@@ -639,40 +656,59 @@
 				}
 			},
 			addCellProp: function () {
-				$('tbody tr td', g.bDiv).each(function () {
-					var tdDiv = document.createElement('div');
-					var n = $('td', $(this).parent()).index(this);
-					var pth = $('th:eq(' + n + ')', g.hDiv).get(0);
-					if (pth != null) {
-						if (p.sortname == $(pth).attr('abbr') && p.sortname) {
-							this.className = 'sorted';
-						}
-						$(tdDiv).css({
-							textAlign: pth.align,
-							width: $('div:first', pth)[0].style.width
-						});
-						if (pth.hidden) {
-							$(this).css('display', 'none');
-						}
-					}
-					if (p.nowrap == false) {
-						$(tdDiv).css('white-space', 'normal');
-					}
-					if (this.innerHTML == '') {
-						this.innerHTML = '&nbsp;';
-					}
-					tdDiv.innerHTML = this.innerHTML;
-					var prnt = $(this).parent()[0];
-					var pid = false;
-					if (prnt.id) {
-						pid = prnt.id.substr(3);
-					}
-					if (pth != null) {
-						if (pth.process) pth.process(tdDiv, pid);
-					}
-					$(this).empty().append(tdDiv).removeAttr('width'); //wrap content
-					g.addTitleToCell(tdDiv);
+				var headers = $('th', g.hDiv),
+					rows = g.bDiv.getElementsByTagName('tr'),
+					numRows = rows.length,
+					ri, row,
+					abbrs = [],
+					widths = [],
+					aligns = [],
+					hiddens = [],
+					processes = [];
+				headers.each(function(i) {
+					abbrs[i] = this.getAttribute('abbr');
+					widths[i] = this.firstChild.style.width;
+					aligns[i] = this.align;
+					hiddens[i] = !!this.hidden;
+					processes[i] = this.process;
 				});
+				
+				for(ri = 0; ri < numRows; ri++) {
+					var tds = rows[ri].children;
+					
+					for(var n = 0, limN = tds.length; n < limN; n++) {
+						var td = tds[n],
+							tdDiv = document.createElement('div');
+						if ('undefined' !== typeof hiddens[n]) {
+							if (p.sortname && (p.sortname === abbrs[n])) {
+								td.className = 'sorted';
+							}
+							tdDiv.style.textAlign = aligns[n];
+							tdDiv.style.width = widths[n];
+							if (hiddens[n]) {
+								td.style.display = 'none';
+							}
+						}
+						if (p.nowrap == false) {
+							tdDiv.style.whiteSpace = 'normal';
+						}
+						tdDiv.innerHTML = td.innerHTML || '&nbsp;';
+						if (processes[n]) {
+							var prnt = rows[ri],
+								pid = false;
+							if (prnt.id) {
+								pid = prnt.id.substr(3);
+							}
+							processes[n](tdDiv, pid);
+						}
+						
+						td.innerHTML = '';
+						td.removeAttribute('width');
+						td.appendChild(tdDiv); //wrap content
+						
+						if(p.addTitleToCell) g.addTitleToCell(tdDiv);
+					}
+				}
 			},
 			getCellDim: function (obj) {// get cell prop for editable event
 				var ht = parseInt($(obj).height());
@@ -695,50 +731,52 @@
 				};
 			},
 			addRowProp: function () {
-				$('tbody tr', g.bDiv).each(function () {
-					$(this).click(function (e) {
-						var obj = (e.target || e.srcElement);
-						if (obj.href || obj.type) return true;
+				// Using event delegation here, because it is MUCH
+				// faster than setting event handlers on each row.
+				var block = $(g.bDiv).undelegate();
+				block.delegate('tr', 'click', function (e) {
+					var obj = (e.target || e.srcElement);
+					if (obj.href || obj.type) return true;
+					$(this).toggleClass('trSelected');
+					if (p.singleSelect && ! g.multisel ) {
+						$(this).siblings().removeClass('trSelected');
 						$(this).toggleClass('trSelected');
-						if (p.singleSelect && ! g.multisel ) {
-							$(this).siblings().removeClass('trSelected');
-							$(this).toggleClass('trSelected');
-						}
-					}).mousedown(function (e) {
-						if (e.shiftKey) {
-							$(this).toggleClass('trSelected');
-							g.multisel = true;
-							this.focus();
-							$(g.gDiv).noSelect();
-						}
-						if (e.ctrlKey)
-						{
-							$(this).toggleClass('trSelected'); 
-							g.multisel = true; 
-							this.focus();
-						}
-					}).mouseup(function () {
-						if (g.multisel && ! e.ctrlKey) {
-							g.multisel = false;
-							$(g.gDiv).noSelect(false);
-						}
-					}).dblclick(function () {
-						if (p.onDoubleClick) {
-							p.onDoubleClick(this, g, p);
-						}
-					}).hover(function (e) {
-						if (g.multisel && e.shiftKey) {
-							$(this).toggleClass('trSelected');
-						}
-					}, function () {});
-					if ($.browser.msie && $.browser.version < 7.0) {
-						$(this).hover(function () {
-							$(this).addClass('trOver');
-						}, function () {
-							$(this).removeClass('trOver');
-						});
+					}
+				}).delegate('tr', 'mousedown', function (e) {
+					if (e.shiftKey) {
+						$(this).toggleClass('trSelected');
+						g.multisel = true;
+						this.focus();
+						$(g.gDiv).noSelect();
+					}
+					if (e.ctrlKey)
+					{
+						$(this).toggleClass('trSelected'); 
+						g.multisel = true; 
+						this.focus();
+					}
+				}).delegate('tr', 'mouseup', function (e) {
+					if (g.multisel && ! e.ctrlKey) {
+						g.multisel = false;
+						$(g.gDiv).noSelect(false);
+					}
+				}).delegate('tr', 'dblclick', function () {
+					if (p.onDoubleClick) {
+						p.onDoubleClick(this, g, p);
+					}
+				}).delegate('tr', 'mouseenter', function (e) {
+					if (g.multisel && e.shiftKey) {
+						$(this).toggleClass('trSelected');
 					}
 				});
+				
+				if ($.browser.msie && $.browser.version < 7.0) {
+					block.delegate('tr', 'mouseenter', function () {
+						$(this).addClass('trOver');
+					}).delegate('tr', 'mouseleave',  function () {;
+						$(this).removeClass('trOver');
+					});
+				}
 			},
 			
 			combo_flag: true,
